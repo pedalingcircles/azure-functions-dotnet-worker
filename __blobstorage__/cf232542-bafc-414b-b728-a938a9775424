@@ -1,0 +1,85 @@
+{
+  "masterKey": {
+    "name": "master",
+    "value": "mPALKfObxxvJa2e9sPUkCbVrv8WTkaQi5yzOkocerTmgAzFuw0zaEg==",
+    "encrypted": false
+  },
+  "functionKeys": [
+    {
+      "name": "default",
+      "value": "z9mbkWRvDgMvlIOJZoi2so8SE7ftUPZYtW7K1sgqyIosAzFuCGMUFg==",
+      "encrypted": false
+    }
+  ],
+  "systemKeys": [],
+  "hostName": "localhost:7071",
+  "instanceId": "0000000000000000000000009917EC70",
+  "source": "runtime",
+  "decryptionKeyId": ""
+}{
+  "masterKey": {
+    "name": "master",
+    "value": "mPALKfObxxvJa2e9sPUkCbVrv8WTkaQi5yzOkocerTmgAzFuw0zaEg==",
+    "encrypted": false
+  },
+  "functionKeys": [
+    {
+      "name": "default",
+      "value": "z9mbkWRvDgMvlIOJZoi2so8SE7ftUPZYtW7K1sgqyIosAzFuCGMUFg==",
+      "encrypted": false
+    }
+  ],
+  "systemKeys": [
+    {
+      "name": "blobs_extension",
+      "value": "_xIi5A8ggh3ommg3PCN4z4M-EwH4yqggCUbnxxj7SBtCAzFuc6xS-g==",
+      "encrypted": false
+    }
+  ],
+  "hostName": "localhost:7071",
+  "instanceId": "0000000000000000000000009917EC70",
+  "source": "runtime",
+  "decryptionKeyId": ""
+}{
+  "masterKey": {
+    "name": "master",
+    "value": "pzQRwrLELcj4u3Q3KuOky159lUiJ8iW8p8NohjX4i6gRAzFuvbFDAA==",
+    "encrypted": false
+  },
+  "functionKeys": [
+    {
+      "name": "default",
+      "value": "Y0txnQq6_S1UOWHIYC8OfjGOG58QMSjIxMbP99XHeSvjAzFuVCtfKA==",
+      "encrypted": false
+    }
+  ],
+  "systemKeys": [],
+  "hostName": "localhost:7071",
+  "instanceId": "0000000000000000000000009917EC70",
+  "source": "runtime",
+  "decryptionKeyId": ""
+}{
+  "masterKey": {
+    "name": "master",
+    "value": "pzQRwrLELcj4u3Q3KuOky159lUiJ8iW8p8NohjX4i6gRAzFuvbFDAA==",
+    "encrypted": false
+  },
+  "functionKeys": [
+    {
+      "name": "default",
+      "value": "Y0txnQq6_S1UOWHIYC8OfjGOG58QMSjIxMbP99XHeSvjAzFuVCtfKA==",
+      "encrypted": false
+    }
+  ],
+  "systemKeys": [
+    {
+      "name": "blobs_extension",
+      "value": "dMnK_iym7-q8fF3Q8VEz1aKU9sbG9IO3XzCZgOxTvY6gAzFuiRSgJA==",
+      "encrypted": false
+    }
+  ],
+  "hostName": "localhost:7071",
+  "instanceId": "0000000000000000000000009917EC70",
+  "source": "runtime",
+  "decryptionKeyId": ""
+}

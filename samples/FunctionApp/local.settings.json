@@ -2,6 +2,7 @@
   "IsEncrypted": false,
   "Values": {
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
-    "AzureWebJobsStorage": "UseDevelopmentStorage=true"
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "APPLICATIONINSIGHTS_CONNECTION_STRING": "InstrumentationKey=a26d89de-9498-4314-a2da-60a2a3f0c984;IngestionEndpoint=https://westeurope-5.in.applicationinsights.azure.com/;LiveEndpoint=https://westeurope.livediagnostics.monitor.azure.com/;ApplicationId=52238aee-cf9d-4c49-8e7c-9884ece3c79f"
   }
 }
