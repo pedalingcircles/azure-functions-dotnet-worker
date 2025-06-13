@@ -16,8 +16,6 @@ namespace FunctionApp
             builder.Services.AddOpenTelemetry()
                 .UseAzureMonitorExporter();
 
-                
-
             var host = builder.Build();
             await host.RunAsync();
         }

@@ -365,3 +365,4 @@ local.settings.json
 /tools/localpack.ps1
 /.vscode
 /.idea
+samples/FunctionApp/local.settings.json

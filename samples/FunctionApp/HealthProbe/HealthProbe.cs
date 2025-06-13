@@ -19,6 +19,10 @@ namespace FunctionApp
         {
             try
             {
+                // Simulate three asynchronous operations, each sleeping for 1 second
+                await DummyAsyncOperation1();
+                await DummyAsyncOperation2();
+                await DummyAsyncOperation3();
                 return new OkObjectResult("Healthy!");
             }
             catch (System.Exception ex)
@@ -27,6 +31,21 @@ namespace FunctionApp
                 return new StatusCodeResult(StatusCodes.Status503ServiceUnavailable);
             }
         }
-    }
 
+        private static async Task DummyAsyncOperation1()
+        {
+            await Task.Delay(500); // Simulate async work by sleeping for 1 second
+        }
+
+
+        private static async Task DummyAsyncOperation2()
+        {
+            await Task.Delay(600); // Simulate async work by sleeping for 1 second
+        }
+
+        private static async Task DummyAsyncOperation3()
+        {
+            await Task.Delay(400); // Simulate async work by sleeping for 1 second
+        }
+    }
 }
