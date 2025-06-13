@@ -3,9 +3,12 @@
     "logging": {
         "applicationInsights": {
             "samplingSettings": {
-                "isEnabled": true,
-                "excludedTypes": "Request"
-            }
+                "isEnabled": false
+            },
+            "enableLiveMetrics": false
+        },
+        "logLevel": {
+            "default": "Information"
         }
     }
 }

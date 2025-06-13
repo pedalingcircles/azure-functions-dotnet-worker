@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using System.Net;
+using System.Diagnostics;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
@@ -11,6 +12,7 @@ namespace FunctionApp
     public class HttpTriggerWithCancellation
     {
         private readonly ILogger _logger;
+        private static readonly ActivitySource ActivitySource = new("FunctionApp");
 
         public HttpTriggerWithCancellation(ILoggerFactory loggerFactory)
         {
@@ -24,26 +26,42 @@ namespace FunctionApp
             FunctionContext executionContext,
             CancellationToken cancellationToken)
         {
-            _logger.LogInformation("HttpTriggerWithCancellation function triggered");
 
-            try
-            {
-                cancellationToken.ThrowIfCancellationRequested();
+    // Start a logging scope with some test properties
+    using (_logger.BeginScope(new Dictionary<string, object>
+    {
+        ["ScopeKey"] = "ScopeValue",
+        ["RequestId"] = Guid.NewGuid().ToString()
+    }))
+    {
+        // Start an Activity with ActivityKind.Server
+        using var activity = ActivitySource.StartActivity(
+            "HttpTriggerWithCancellation",
+            ActivityKind.Server);
 
-                var response = req.CreateResponse(HttpStatusCode.OK);
-                response.WriteString($"Hello world!");
-                return response;
-            }
-            catch (OperationCanceledException)
-            {
-                _logger.LogInformation("A cancellation token was received. Taking precautionary actions.");
+        // Set standard HTTP attributes
+        activity?.SetTag("http.method", req.Method);
+        activity?.SetTag("http.url", req.Url.ToString());
 
-                // Take precautions like noting how far along you are with processing the batch
+        _logger.LogInformation("Hello from inside a logging scope!");
 
-                var response = req.CreateResponse(HttpStatusCode.ServiceUnavailable);
-                response.WriteString("Invocation cancelled");
-                return response;
-            }
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var response = req.CreateResponse(HttpStatusCode.OK);
+            response.WriteString($"Hello world!");
+            return response;
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("A cancellation token was received. Taking precautionary actions.");
+
+            var response = req.CreateResponse(HttpStatusCode.ServiceUnavailable);
+            response.WriteString("Invocation cancelled");
+            return response;
+        }
+    }
         }
     }
 }
