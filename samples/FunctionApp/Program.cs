@@ -1,117 +1,17 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the MIT License. See License.txt in the project root for license information.
-
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Azure.Functions.Worker;
+﻿using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
-using OpenTelemetry.Metrics;
-using Azure.Monitor.OpenTelemetry.Exporter;
-using OpenTelemetry.Logs;
 
 namespace FunctionApp
 {
-    class Program
+    public class Program
     {
-        static async Task Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            var host = new HostBuilder()
-                .ConfigureFunctionsWorkerDefaults()
-                .ConfigureServices((context, services) =>
-                {
-                    // var resourceBuilder = ResourceBuilder.CreateDefault()
-                    //     .AddService("FunctionApp");
-
-                    var resourceBuilder = ResourceBuilder.CreateDefault()
-                        .AddService(
-                            
-                            serviceName: "TestServiceName",
-                            serviceNamespace: "TestServiceNamespace",
-                            serviceVersion: "1.2.3",
-                            serviceInstanceId: "TestMachineName"
-                        )
-                        .AddAttributes(new[]
-                        {
-                            new KeyValuePair<string, object>("customAttribute1", "value1"),
-                            new KeyValuePair<string, object>("customAttribute2", "value2")
-                        });
-
-
-                    // Add OpenTelemetry logging with Azure Monitor exporter
-                    // services.AddLogging(loggingBuilder =>
-                    // {
-                    //     loggingBuilder.AddOpenTelemetry(logging =>
-                    //     {
-                    //         logging.SetResourceBuilder(resourceBuilder);
-                    //         logging.AddAzureMonitorLogExporter(options =>
-                    //         {
-                    //             options.ConnectionString = "InstrumentationKey=a26d89de-9498-4314-a2da-60a2a3f0c984;IngestionEndpoint=https://westeurope-5.in.applicationinsights.azure.com/;LiveEndpoint=https://westeurope.livediagnostics.monitor.azure.com/;ApplicationId=52238aee-cf9d-4c49-8e7c-9884ece3c79f";
-                    //         });
-                    //     });
-                    // });
-
-                    services.AddOpenTelemetry()
-                        .WithTracing(tracing =>
-                        {
-                            tracing
-                                .SetResourceBuilder(resourceBuilder)
-                                .AddSource("FunctionApp")
-                                .AddAzureMonitorTraceExporter(options => options.ConnectionString = "InstrumentationKey=9f17146c-de47-4b79-b572-9489ca5438ad;IngestionEndpoint=https://westeurope-5.in.applicationinsights.azure.com/;LiveEndpoint=https://westeurope.livediagnostics.monitor.azure.com/;ApplicationId=26ccbf35-57d2-4caa-b5f7-9cff55d45057")
-                                .AddHttpClientInstrumentation()
-                                .AddAspNetCoreInstrumentation()
-                                .AddConsoleExporter(); // or OTLP, Azure Monitor, etc.
-                        })
-                        .WithLogging(logs =>
-                        {
-                            logs
-                                .SetResourceBuilder(resourceBuilder)
-                                .AddAzureMonitorLogExporter(options => options.ConnectionString = "InstrumentationKey=9f17146c-de47-4b79-b572-9489ca5438ad;IngestionEndpoint=https://westeurope-5.in.applicationinsights.azure.com/;LiveEndpoint=https://westeurope.livediagnostics.monitor.azure.com/;ApplicationId=26ccbf35-57d2-4caa-b5f7-9cff55d45057");
-                        })
-                        .WithMetrics(metrics =>
-                        {
-                            metrics
-                                .SetResourceBuilder(resourceBuilder)
-                                .AddMeter("FunctionApp")
-                                .AddHttpClientInstrumentation()
-                                .AddAspNetCoreInstrumentation()
-                                .AddAzureMonitorMetricExporter(options => options.ConnectionString = "InstrumentationKey=9f17146c-de47-4b79-b572-9489ca5438ad;IngestionEndpoint=https://westeurope-5.in.applicationinsights.azure.com/;LiveEndpoint=https://westeurope.livediagnostics.monitor.azure.com/;ApplicationId=26ccbf35-57d2-4caa-b5f7-9cff55d45057")
-                                .AddRuntimeInstrumentation()
-                                .AddConsoleExporter();
-                        });
-                })
-                .Build();
-
-
-
-            // var host = new HostBuilder()
-            //     .ConfigureFunctionsWorkerDefaults()
-            //     .ConfigureServices(s =>
-            //     {
-            //         s.AddApplicationInsightsTelemetryWorkerService();
-            //         s.ConfigureFunctionsApplicationInsights();
-            //         s.AddSingleton<IHttpResponderService, DefaultHttpResponderService>();
-            //         s.Configure<LoggerFilterOptions>(options =>
-            //         {
-            //             // The Application Insights SDK adds a default logging filter that instructs ILogger to capture only Warning and more severe logs. Application Insights requires an explicit override.
-            //             // Log levels can also be configured using appsettings.json. For more information, see https://learn.microsoft.com/en-us/azure/azure-monitor/app/worker-service#ilogger-logs
-            //             LoggerFilterRule? toRemove = options.Rules.FirstOrDefault(rule => rule.ProviderName
-            //                 == "Microsoft.Extensions.Logging.ApplicationInsights.ApplicationInsightsLoggerProvider");
-
-            //             if (toRemove is not null)
-            //             {
-            //                 options.Rules.Remove(toRemove);
-            //             }
-            //         });
-            //     })
-            //     .Build();
-
-
-
+            var builder = FunctionsApplication.CreateBuilder(args);
+            var host = builder.Build();
             await host.RunAsync();
         }
     }
