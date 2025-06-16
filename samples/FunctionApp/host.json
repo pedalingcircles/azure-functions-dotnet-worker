@@ -6,7 +6,8 @@
             "samplingSettings": {
                 "isEnabled": false
             },
-            "enableLiveMetrics": false
+            "enableLiveMetrics": false,
+            "enableDependencyTracking": false
         },
         "logLevel": {
             "default": "Information"

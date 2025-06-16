@@ -9,21 +9,37 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
 
 namespace FunctionApp
 {
     public class HealthProbe(ILogger<HealthProbe> _logger)
     {
+
         [Function("HealthProbe")]
-        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequest req)
+        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequestData req)
         {
             try
             {
-                // Simulate three asynchronous operations, each sleeping for 1 second
-                await DummyAsyncOperation1();
-                await DummyAsyncOperation2();
-                await DummyAsyncOperation3();
-                return new OkObjectResult("Healthy!");
+                using (_logger.BeginScope(new Dictionary<string, object?>
+                {
+                    ["HttpMethod"] = req.Method,
+                    ["Path"] = req.Url?.AbsolutePath,
+                    ["Host"] = req.Url?.Host
+                }))
+                {
+                    _logger.LogInformation("Starting");
+
+                    // Simulate three asynchronous operations, each sleeping for 1 second
+                    await DummyAsyncOperation1();
+                    await DummyAsyncOperation2();
+                    await DummyAsyncOperation3();
+                    _logger.LogInformation("Exiting");
+                    return new OkObjectResult("Healthy!");
+                    
+                }
+
+
             }
             catch (System.Exception ex)
             {
