@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Http.Extensions;
 
 namespace FunctionApp
 {
-    public class HealthProbe(ILogger<HealthProbe> _logger)
+    public class HealthProbe(ILogger<HealthProbe> _logger, Instrumentation _instrumentation)
     {
 
         [Function("HealthProbe")]
@@ -21,37 +21,26 @@ namespace FunctionApp
         {
             try
             {
-                using (_logger.BeginScope(new Dictionary<string, object?>
                 {
-                    ["HttpMethod"] = req.Method,
-                    ["Path"] = req.Url?.AbsolutePath,
-                    ["Host"] = req.Url?.Host
-                }))
-                {
+
+                    // Start of new trace, since this has not parent is it will create a new root trace.
+                    using var activity = _instrumentation.ActivitySource.StartActivity("HealthProbeFunction.Root", ActivityKind.Server);
+                    activity?.SetTag("http.method", req.Method);
+                    activity?.SetTag("http.url", req.Url?.ToString());
+                    activity?.SetTag("faas.trigger", "http");
+                    activity?.SetTag("caller", "HealthProbe");
+
+                    activity?.SetStatus(ActivityStatusCode.Ok, "Health probe is running");
                     _logger.LogInformation("Starting health probe");
 
-                    // Added to capture requests
-                    var activitySource = new ActivitySource("MyApp.HealthProbe");
-                    using (var activity = activitySource.StartActivity("MyApp.HealthProbe", ActivityKind.Server))
-                    {
-                        activity?.SetTag("http.method", req.Method);
-                        activity?.SetTag("http.url", req.Url?.ToString());
-                        activity?.SetTag("faas.trigger", "http");
-
-                    }
-
-
-
                     // Simulate three asynchronous operations, each sleeping for 1 second
+                    activity?.SetStatus(ActivityStatusCode.Ok, "Calling DummyAsyncOperation1");
                     await DummyAsyncOperation1();
                     await DummyAsyncOperation2();
                     await DummyAsyncOperation3();
                     _logger.LogInformation("Exiting health probe");
                     return new OkObjectResult("Healthy!");
-                    
                 }
-
-
             }
             catch (System.Exception ex)
             {
@@ -60,19 +49,26 @@ namespace FunctionApp
             }
         }
 
-        private static async Task DummyAsyncOperation1()
+        private async Task DummyAsyncOperation1()
         {
+            using var activity = _instrumentation.ActivitySource.StartActivity("DummyAsyncOperation1");
+            activity?.SetTag("operation", "DummyAsyncOperation1");
+
             await Task.Delay(500); // Simulate async work by sleeping for 1 second
         }
 
 
-        private static async Task DummyAsyncOperation2()
+        private async Task DummyAsyncOperation2()
         {
+            using var activity = _instrumentation.ActivitySource.StartActivity("DummyAsyncOperation2");
+            activity?.SetTag("operation", "DummyAsyncOperation2");
             await Task.Delay(600); // Simulate async work by sleeping for 1 second
         }
 
-        private static async Task DummyAsyncOperation3()
+        private async Task DummyAsyncOperation3()
         {
+            using var activity = _instrumentation.ActivitySource.StartActivity("DummyAsyncOperation2");
+            activity?.SetTag("operation", "DummyAsyncOperation2");
             await Task.Delay(400); // Simulate async work by sleeping for 1 second
         }
     }

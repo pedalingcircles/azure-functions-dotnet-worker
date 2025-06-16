@@ -15,9 +15,10 @@ namespace FunctionApp
         {
             var builder = FunctionsApplication.CreateBuilder(args);
 
+            builder.Services.AddSingleton<Instrumentation>();
+
             var resourceBuilder = ResourceBuilder.CreateDefault()
-                .AddService(serviceName: "MyApp", serviceVersion: "1.0.0")
-                
+                .AddService(serviceName: "MyApp", serviceVersion: "3.2.1", serviceNamespace: "Samples.MyFunctionApp")
                 .AddAttributes(new[]
                 {
                     new KeyValuePair<string, object>("deployment.environment", "local"),
@@ -29,8 +30,7 @@ namespace FunctionApp
                 {
                     tracing
                         .SetResourceBuilder(resourceBuilder)
-                        .AddSource("MyApp.HealthProbe") // Add your ActivitySource name here
-                        .AddHttpClientInstrumentation()
+                        .AddSource("functionapp-server") // Add your ActivitySource name here
                         .AddAzureMonitorTraceExporter(options =>
                         {
                             options.ConnectionString = "";
