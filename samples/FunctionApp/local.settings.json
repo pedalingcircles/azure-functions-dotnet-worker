@@ -2,7 +2,7 @@
   "IsEncrypted": false,
   "Values": {
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
-    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-    "APPLICATIONINSIGHTS_CONNECTION_STRING": ""
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true"
+    //"APPLICATIONINSIGHTS_CONNECTION_STRING": ""
   }
 }

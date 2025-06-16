@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Azure.Monitor.OpenTelemetry.Exporter;
 using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 
 namespace FunctionApp
 {
@@ -14,9 +15,28 @@ namespace FunctionApp
         {
             var builder = FunctionsApplication.CreateBuilder(args);
 
-            builder.Services.AddOpenTelemetry()
-                .UseAzureMonitorExporter();
+            var resourceBuilder = ResourceBuilder.CreateDefault()
+                .AddService(serviceName: "MyApp", serviceVersion: "1.0.0")
+                
+                .AddAttributes(new[]
+                {
+                    new KeyValuePair<string, object>("deployment.environment", "local"),
+                    new KeyValuePair<string, object>("region", "eastus2")
+                });
 
+            builder.Services.AddOpenTelemetry()
+                .WithTracing(tracing =>
+                {
+                    tracing
+                        .SetResourceBuilder(resourceBuilder)
+                        .AddSource("MyApp.HealthProbe") // Add your ActivitySource name here
+                        .AddHttpClientInstrumentation()
+                        .AddAzureMonitorTraceExporter(options =>
+                        {
+                            options.ConnectionString = "";
+                        });
+                });
+                // .UseAzureMonitorExporter();
 
             // ✅ Enable logging
             // builder.Logging.AddConsole(); // Optional, for local dev
@@ -25,7 +45,7 @@ namespace FunctionApp
             {
                 logging.IncludeFormattedMessage = true;
                 logging.IncludeScopes = true;
-                logging.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("MyApp"));
+                logging.SetResourceBuilder(resourceBuilder);
                 logging.AddAzureMonitorLogExporter(options =>
                 {
                     options.ConnectionString = "";

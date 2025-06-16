@@ -28,13 +28,25 @@ namespace FunctionApp
                     ["Host"] = req.Url?.Host
                 }))
                 {
-                    _logger.LogInformation("Starting");
+                    _logger.LogInformation("Starting health probe");
+
+                    // Added to capture requests
+                    var activitySource = new ActivitySource("MyApp.HealthProbe");
+                    using (var activity = activitySource.StartActivity("MyApp.HealthProbe", ActivityKind.Server))
+                    {
+                        activity?.SetTag("http.method", req.Method);
+                        activity?.SetTag("http.url", req.Url?.ToString());
+                        activity?.SetTag("faas.trigger", "http");
+
+                    }
+
+
 
                     // Simulate three asynchronous operations, each sleeping for 1 second
                     await DummyAsyncOperation1();
                     await DummyAsyncOperation2();
                     await DummyAsyncOperation3();
-                    _logger.LogInformation("Exiting");
+                    _logger.LogInformation("Exiting health probe");
                     return new OkObjectResult("Healthy!");
                     
                 }
