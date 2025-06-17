@@ -11,46 +11,69 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using System.Diagnostics.Metrics;
+using Azure;
 
 namespace FunctionApp
 {
-    public class HealthProbe(ILogger<HealthProbe> _logger, Instrumentation _instrumentation, Meter _meter)
+    public class HealthProbe(ILogger<HealthProbe> _logger, Instrumentation _instrumentation)
     {
 
         [Function("HealthProbe")]
-        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequestData req)
+        public async Task<HttpResponseData> Run([HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequestData req)
         {
+            using var scope = _logger.BeginScope(new Dictionary<string, object?>
+            {
+                ["Foo"] = "bar",
+                ["Bang"] = "buzz"
+            });
+
+            // Start of new trace, since this has not parent is it will create a new root trace.
+            // In order for this to be a special Request trace 
+            //      ActivityKind must be set to Server.
+            //      http.method, http.url tags must be set
+            // Optional and recommended tags are:
+            //      faas.trigger especially for non HTTP triggers see: https://opentelemetry.io/docs/specs/semconv/faas/faas-spans/ and https://opentelemetry.io/docs/specs/semconv/registry/attributes/faas/
+            using var activity = _instrumentation.ActivitySource.StartActivity("HandleHealthProbeRequest", ActivityKind.Server);
+            activity?.SetTag("http.method", req.Method);
+            activity?.SetTag("http.url", req.Url?.ToString());
+            activity?.SetTag("faas.trigger", "http");
+            activity?.SetTag("caller", "HealthProbe");
+            HttpResponseData? response = null;
+
             try
             {
-                {
+                // activity?.SetStatus(ActivityStatusCode.Ok, "Health probe is running");
+                _logger.LogInformation("Starting health probe");
 
-                    // Start of new trace, since this has not parent is it will create a new root trace.
-                    using var activity = _instrumentation.ActivitySource.StartActivity("HealthProbeFunction.Root", ActivityKind.Server);
-                    activity?.SetTag("http.method", req.Method);
-                    activity?.SetTag("http.url", req.Url?.ToString());
-                    activity?.SetTag("faas.trigger", "http");
-                    activity?.SetTag("caller", "HealthProbe");
+                // Simulate three asynchronous operations, each sleeping for 1 second
+                // activity?.SetStatus(ActivityStatusCode.Ok, "Calling DummyAsyncOperation1");
+                await DummyAsyncOperation1();
+                await DummyAsyncOperation2();
+                await DummyAsyncOperation3();
+                _logger.LogInformation("Exiting health probe");
 
-                    activity?.SetStatus(ActivityStatusCode.Ok, "Health probe is running");
-                    _logger.LogInformation("Starting health probe");
-
-                    // Simulate three asynchronous operations, each sleeping for 1 second
-                    activity?.SetStatus(ActivityStatusCode.Ok, "Calling DummyAsyncOperation1");
-                    await DummyAsyncOperation1();
-                    await DummyAsyncOperation2();
-                    await DummyAsyncOperation3();
-                    _logger.LogInformation("Exiting health probe");
-               
-                    var counter = _meter.CreateCounter<long>("HealthProbeCounter", "1.0.0", "A counter for health probe invocations");
-                    counter.Add(1, new KeyValuePair<string, object?>("source", "http"));
-
-                    return new OkObjectResult("Healthy!");
-                }
+                response = req.CreateResponse(System.Net.HttpStatusCode.OK);
+                response.WriteString("Service Available");
+                return response;
             }
             catch (System.Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while checking health status.");
-                return new StatusCodeResult(StatusCodes.Status503ServiceUnavailable);
+                //_logger.LogError(ex, "An error occurred while checking health status.");
+                activity?.SetStatus(ActivityStatusCode.Error);
+                activity?.SetTag("otel.status_code", "ERROR");
+                activity?.SetTag("exception.message", ex.Message);
+                activity?.SetTag("exception.stacktrace", ex.StackTrace);
+
+                response = req.CreateResponse(System.Net.HttpStatusCode.ServiceUnavailable);
+                response.WriteString("Service Unavailable");
+                return response;
+            }
+            finally
+            {
+                if (response != null)
+                {
+                    activity?.SetTag("http.status_code", (int)response.StatusCode);
+                }
             }
         }
 

@@ -20,12 +20,8 @@ namespace FunctionApp
 
             builder.Services.AddSingleton<Instrumentation>();
 
-            // Create and register a Meter
-            var meter = new Meter("My.FunctionApp.Metrics", "1.0.0");
-            builder.Services.AddSingleton(meter);
-
             var resourceBuilder = ResourceBuilder.CreateDefault()
-                .AddService(serviceName: "MyApp", serviceVersion: "3.2.1", serviceNamespace: "Samples.MyFunctionApp")
+                .AddService(serviceName: "FunctionApp", serviceVersion: "3.2.1", serviceNamespace: "Samples.FunctionApp")
                 .AddAttributes(new[]
                 {
                     new KeyValuePair<string, object>("deployment.environment", "local"),
@@ -36,8 +32,9 @@ namespace FunctionApp
                 .WithTracing(tracing =>
                 {
                     tracing
+                        .AddConsoleExporter() // Optional, for local dev
                         .SetResourceBuilder(resourceBuilder)
-                        .AddSource("functionapp-server") // Add your ActivitySource name here
+                        .AddSource(Instrumentation.ActivitySourceName) // Add your ActivitySource name here
                         .AddAzureMonitorTraceExporter(options =>
                         {
                             options.ConnectionString = "";
@@ -46,8 +43,9 @@ namespace FunctionApp
                 .WithMetrics(metrics =>
                 {
                     metrics
+                        .AddConsoleExporter() // Optional, for local dev
                         .SetResourceBuilder(resourceBuilder)
-                        .AddMeter("My.FunctionApp.Metrics")
+                        .AddMeter($"{typeof(Program).Namespace ?? "Samples.Functions"}.Metrics")
                         .AddAzureMonitorMetricExporter(options =>
                         {
                             options.ConnectionString = "";
@@ -55,7 +53,7 @@ namespace FunctionApp
                 });
 
             // ✅ Enable logging
-            // builder.Logging.AddConsole(); // Optional, for local dev
+            builder.Logging.AddConsole(); // Optional, for local dev
             builder.Logging.ClearProviders(); // Remove default ILogger providers
             builder.Logging.AddOpenTelemetry(logging =>
             {
