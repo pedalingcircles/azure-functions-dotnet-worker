@@ -10,10 +10,11 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
+using System.Diagnostics.Metrics;
 
 namespace FunctionApp
 {
-    public class HealthProbe(ILogger<HealthProbe> _logger, Instrumentation _instrumentation)
+    public class HealthProbe(ILogger<HealthProbe> _logger, Instrumentation _instrumentation, Meter _meter)
     {
 
         [Function("HealthProbe")]
@@ -39,6 +40,10 @@ namespace FunctionApp
                     await DummyAsyncOperation2();
                     await DummyAsyncOperation3();
                     _logger.LogInformation("Exiting health probe");
+               
+                    var counter = _meter.CreateCounter<long>("HealthProbeCounter", "1.0.0", "A counter for health probe invocations");
+                    counter.Add(1, new KeyValuePair<string, object?>("source", "http"));
+
                     return new OkObjectResult("Healthy!");
                 }
             }

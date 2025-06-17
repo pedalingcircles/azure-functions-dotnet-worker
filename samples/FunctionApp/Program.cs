@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 using Azure.Monitor.OpenTelemetry.Exporter;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using OpenTelemetry;
+using OpenTelemetry.Metrics;
+using System.Diagnostics.Metrics;
 
 namespace FunctionApp
 {
@@ -16,6 +19,10 @@ namespace FunctionApp
             var builder = FunctionsApplication.CreateBuilder(args);
 
             builder.Services.AddSingleton<Instrumentation>();
+
+            // Create and register a Meter
+            var meter = new Meter("My.FunctionApp.Metrics", "1.0.0");
+            builder.Services.AddSingleton(meter);
 
             var resourceBuilder = ResourceBuilder.CreateDefault()
                 .AddService(serviceName: "MyApp", serviceVersion: "3.2.1", serviceNamespace: "Samples.MyFunctionApp")
@@ -35,8 +42,17 @@ namespace FunctionApp
                         {
                             options.ConnectionString = "";
                         });
+                })
+                .WithMetrics(metrics =>
+                {
+                    metrics
+                        .SetResourceBuilder(resourceBuilder)
+                        .AddMeter("My.FunctionApp.Metrics")
+                        .AddAzureMonitorMetricExporter(options =>
+                        {
+                            options.ConnectionString = "";
+                        });
                 });
-                // .UseAzureMonitorExporter();
 
             // ✅ Enable logging
             // builder.Logging.AddConsole(); // Optional, for local dev
@@ -51,6 +67,8 @@ namespace FunctionApp
                     options.ConnectionString = "";
                 });
             });
+
+
 
             var host = builder.Build();
             await host.RunAsync();
